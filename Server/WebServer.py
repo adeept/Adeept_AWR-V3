@@ -64,9 +64,6 @@ def replace_num(initial,new_num):   #Call this function to replace data in '.txt
     with open(thisPath+"/RPIservo.py","w") as f:
         f.writelines(newline)
 
-def ap_thread():
-    os.system("sudo create_ap wlan0 eth0 Adeept_Robot 12345678")
-
 
 def functionSelect(command_input, response):
     if 'findColor' == command_input:
@@ -229,49 +226,6 @@ def configPWM(command_input, response):
         for i in range(5):
             scGear.moveAngle(i, 0)
 
-
-def update_code():
-    # Update local to be consistent with remote
-    projectPath = thisPath[:-7]
-    with open(f'{projectPath}/config.json', 'r') as f1:
-        config = json.load(f1)
-        if not config['production']:
-            print('Update code')
-            if os.system(f'cd {projectPath} && sudo git fetch --all && sudo git reset --hard origin/master && sudo git pull') == 0:
-                print('Update successfully')
-                print('Restarting...')
-                os.system('sudo reboot')
-            
-def wifi_check():
-    try:
-        s =socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-        s.connect(("1.1.1.1",80))
-        ipaddr_check=s.getsockname()[0]
-        s.close()
-        print(ipaddr_check)
-    except Exception as e:
-        print("Failed to connect to the Wi-Fi. The AP mode will be enabled. " + str(e))
-        ap_threading=threading.Thread(target=ap_thread)   #Define a thread for data receiving
-        ap_threading.setDaemon(True)                          #'True' means it is a front thread,it would close when the mainloop() closes
-        ap_threading.start()                                  #Thread starts
-        ws2812.set_all_led_color_data(0,16,50)
-        ws2812.show()
-        time.sleep(1)
-        ws2812.set_all_led_color_data(0,16,100)
-        ws2812.show()
-        time.sleep(1)
-        ws2812.set_all_led_color_data(0,16,150)
-        ws2812.show()
-        time.sleep(1)
-        ws2812.set_all_led_color_data(0,16,200)
-        ws2812.show()
-        time.sleep(1)
-        ws2812.set_all_led_color_data(0,16,255)
-        ws2812.show()
-        time.sleep(1)
-        ws2812.set_all_led_color_data(35,255,35)
-        ws2812.show()
-
 async def check_permit(websocket):
     while True:
         recv_str = await websocket.recv()
@@ -347,9 +301,6 @@ async def recv_msg(websocket):
                 err = int(data.split()[1])
                 flask_app.camera.errorSet(err)
 
-            elif 'defEC' in data:#Z
-                fpv.defaultExpCom()
-
         elif(isinstance(data,dict)):
             if data['title'] == "findColorSet":
                 color = data['data']
@@ -380,7 +331,6 @@ if __name__ == '__main__':
         pass
 
     while  1:
-        wifi_check()
         try:                  #Start server,waiting for client
             start_server = websockets.serve(main_logic, '0.0.0.0', 8888)
             asyncio.get_event_loop().run_until_complete(start_server)

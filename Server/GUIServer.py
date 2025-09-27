@@ -74,10 +74,6 @@ def FPV_thread():
     fpv.capture_thread(addr[0])
 
 
-def ap_thread():
-    os.system("sudo create_ap wlan0 eth0 Adeept_Robot 12345678")
-
-
 def functionSelect(command_input, response):
     global functionMode
 
@@ -220,38 +216,6 @@ def configPWM(command_input):
         for i in range(5):
             scGear.moveAngle(i, 0)
 
-
-
-def wifi_check():
-    try:
-        s =socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-        s.connect(("1.1.1.1",80))
-        ipaddr_check=s.getsockname()[0]
-        s.close()
-        print(ipaddr_check)
-    except Exception as e:
-        print("Failed to connect to the Wi-Fi. The AP mode will be enabled. " + str(e))
-        ap_threading=threading.Thread(target=ap_thread)   #Define a thread for data receiving
-        ap_threading.daemon = True                          #'True' means it is a front thread,it would close when the mainloop() closes
-        ap_threading.start()                                  #Thread starts
-        ws2812.set_all_led_color_data(0,16,50)
-        ws2812.show()
-        time.sleep(1)
-        ws2812.set_all_led_color_data(0,16,100)
-        ws2812.show()
-        time.sleep(1)
-        ws2812.set_all_led_color_data(0,16,150)
-        ws2812.show()
-        time.sleep(1)
-        ws2812.set_all_led_color_data(0,16,200)
-        ws2812.show()
-        time.sleep(1)
-        ws2812.set_all_led_color_data(0,16,255)
-        ws2812.show()
-        time.sleep(1)
-        ws2812.set_all_led_color_data(35,255,35)
-        ws2812.show()
-
 def recv_msg(tcpCliSock):
     global speed_set, modeSelect
     move.setup()
@@ -341,17 +305,6 @@ def recv_msg(tcpCliSock):
         response = json.dumps(response)
         tcpCliSock.sendall(response.encode())
 
-def test_Network_Connection():
-    while True:
-        try:
-            s =socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-            s.connect(("1.1.1.1",80))
-            s.close()
-        except:
-            move.destroy()
-        
-        time.sleep(0.5)
-
 if __name__ == '__main__':
     switch.switchSetup()
     switch.set_all_switch_off()                                  
@@ -370,8 +323,6 @@ if __name__ == '__main__':
     BUFSIZ = 1024                             #Define buffer size
     ADDR = (HOST, PORT)
 
-   
-    wifi_check()
     try:                  #Start server,waiting for client
         tcpSerSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         tcpSerSock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
