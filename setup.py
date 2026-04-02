@@ -8,7 +8,7 @@ import time
 import subprocess
 
 username = os.popen("echo ${SUDO_USER:-$(who -m | awk '{ print $1 }')}").readline().strip() # pi
-user_home = os.popen('getent passwd %s | cut -d: -f 6'%username).readline().strip()         # home
+user_home = os.popen(f'getent passwd {username} | cut -d: -f 6').readline().strip()        # home
  
 curpath = os.path.realpath(__file__)
 thisPath = "/" + os.path.dirname(curpath)
@@ -88,7 +88,6 @@ commands_apt = [
 "sudo apt-get install -y python3-picamera2",
 "sudo apt-get install -y python3-opencv",
 "sudo apt-get install -y opencv-data",
-"sudo apt-get install -y python3-pyaudio"
 ]
 mark_apt = 0
 for x in range(3):
@@ -103,13 +102,12 @@ commands_pip_1 = [
 "sudo pip3 install adafruit-circuitpython-motor",
 "sudo pip3 install adafruit-circuitpython-pca9685",
 "sudo pip3 install spidev",
-"sudo pip3 install adafruit-circuitpython-busdevice adafruit-circuitpython-ssd1306",
-"sudo pip3 install pillow",
+"sudo pip3 install adafruit-circuitpython-busdevice",
 "sudo pip3 install flask",
 "sudo pip3 install flask_cors",
 "sudo pip3 install numpy",
 "sudo pip3 install pyzmq",
-"sudo pip3 install imutils zmq pybase64 psutil",
+"sudo pip3 install imutils pybase64 psutil",
 "sudo pip3 install websockets==13.0",
 "sudo pip3 install adafruit-circuitpython-ads7830"
 ]
@@ -117,13 +115,12 @@ commands_pip_2 = [
 "sudo pip3 install adafruit-circuitpython-motor --break-system-packages",
 "sudo pip3 install adafruit-circuitpython-pca9685 --break-system-packages",
 "sudo pip3 install spidev --break-system-packages",
-"sudo pip3 install adafruit-circuitpython-busdevice adafruit-circuitpython-ssd1306 --break-system-packages",
-"sudo pip3 install pillow --break-system-packages",
+"sudo pip3 install adafruit-circuitpython-busdevice --break-system-packages",
 "sudo pip3 install flask --break-system-packages",
 "sudo pip3 install flask_cors --break-system-packages",
 "sudo pip3 install numpy --break-system-packages",
 "sudo pip3 install pyzmq --break-system-packages",
-"sudo pip3 install imutils zmq pybase64 psutil --break-system-packages",
+"sudo pip3 install imutils pybase64 psutil --break-system-packages",
 "sudo pip3 install websockets==13.0 --break-system-packages",
 "sudo pip3 install adafruit-circuitpython-ads7830 --break-system-packages"
 ]
@@ -149,18 +146,18 @@ else:
 wifi_service_name="wifi-hotspot-manager.service"
 if not check_systemctl_service(wifi_service_name):
     # wifi and hotspot switch script
-    os.system(f"sudo cp {thisPath}/wifi_hotspot_manager.sh /home/pi")
-    os.system("sudo chmod +x /home/pi/wifi_hotspot_manager.sh")
+    os.system(f"sudo cp {thisPath}/wifi_hotspot_manager.sh {user_home}")
+    os.system(f"sudo chmod +x {user_home}/wifi_hotspot_manager.sh")
 
 
-    wifi_service_content="""[Unit]
+    wifi_service_content=f"""[Unit]
 Description=WiFi and Hotspot Manager Service
 After=network.target NetworkManager.service
 Wants=NetworkManager.service
 
 [Service]
 Type=oneshot
-ExecStart=/home/pi/wifi_hotspot_manager.sh  
+ExecStart={user_home}/wifi_hotspot_manager.sh  
 User=root
 RemainAfterExit=yes
 
@@ -194,13 +191,13 @@ robot_service_name="Adeept_Robot.service"
 if not check_systemctl_service(robot_service_name):
     # auto start script
     try:
-        os.system("sudo touch /"+ user_home +"/startup.sh")
-        with open("/"+ user_home +"/startup.sh",'w') as file_to_write:
+        os.system(f"sudo touch {user_home}/startup.sh")
+        with open(f"{user_home}/startup.sh",'w') as file_to_write:
             #you can choose how to control the robot
-            file_to_write.write("#!/bin/sh\nsleep 5\nsudo python3 " + thisPath + "/Server/WebServer.py")
+            file_to_write.write(f"#!/bin/sh\nsleep 5\nsudo python3  {thisPath}/Server/WebServer.py")
     except:
         pass
-    os.system("sudo chmod 777 /"+ user_home +"/startup.sh")
+    os.system(f"sudo chmod 777 {user_home}/startup.sh")
 
     #config systemctl service
     # Define the content of the systemd service file
@@ -211,8 +208,8 @@ After={wifi_service_name}
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/home/pi
-ExecStart=/home/pi/startup.sh  
+WorkingDirectory={user_home}
+ExecStart={user_home}/startup.sh  
 Restart=no
 
 [Install]
