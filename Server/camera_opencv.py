@@ -20,7 +20,6 @@ import picamera2
 import libcamera
 
 from picamera2 import Picamera2
-import io
 
 Dv = -1 #Directional variable
 
@@ -34,6 +33,7 @@ findLineMove = 1
 tracking_servo_status = 0
 FLCV_Status = 0
 
+APPMode = None
 CVRun = 1
 linePos_1 = 440
 linePos_2 = 380
@@ -310,7 +310,11 @@ class CVThread(threading.Thread):
             print('No servoPort %d assigned.'%ID)
 
     def findColor(self, frame_image):
-        hsv = cv2.cvtColor(frame_image, cv2.COLOR_BGR2HSV)
+        global APPMode
+        if APPMode == 'APP':
+            hsv = cv2.cvtColor(frame_image, cv2.COLOR_BGR2RGB)
+        else:
+            hsv = cv2.cvtColor(frame_image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, colorLower, colorUpper)#1
         mask = cv2.GaussianBlur(mask, (5, 5), 0)
         mask = cv2.erode(mask, None, iterations=2)
@@ -386,6 +390,30 @@ class Camera(BaseCamera):
         print('HSV_2:%d %d %d'%(HUE_2,SAT_2,VAL_2))
         print(colorUpper)
         print(colorLower)
+
+    def colorFindSetApp(self, invarH, invarS, invarV):
+            global colorUpper, colorLower
+            HUE_1 = invarH+100
+            HUE_2 = invarH-100
+            if HUE_1>255:HUE_1=255
+            if HUE_2<0:HUE_2=0
+
+            SAT_1 = invarS+100
+            SAT_2 = invarS-100
+            if SAT_1>255:SAT_1=255
+            if SAT_2<0:SAT_2=0
+
+            VAL_1 = invarV+100
+            VAL_2 = invarV-100
+            if VAL_1>255:VAL_1=255
+            if VAL_2<0:VAL_2=0
+
+            colorUpper = np.array([HUE_1, SAT_1, VAL_1])
+            colorLower = np.array([HUE_2, SAT_2, VAL_2])
+            print('HSV_1:%d %d %d'%(HUE_1, SAT_1, VAL_1))
+            print('HSV_2:%d %d %d'%(HUE_2, SAT_2, VAL_2))
+            print(colorUpper)
+            print(colorLower)
 
     def modeSet(self, invar):
         Camera.modeSelect = invar
